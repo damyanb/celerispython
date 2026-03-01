@@ -1,0 +1,153 @@
+Metadata-Version: 2.4
+Name: celerisai
+Version: 0.1.0
+Summary: CelerisAi: Python-Taichi nearshore wave modeling framework
+Author: Willington Renteria
+License: MIT License
+        
+        Copyright (c) 2024 WILLINGTON RENTERIA
+        
+        Permission is hereby granted, free of charge, to any person obtaining a copy
+        of this software and associated documentation files (the "Software"), to deal
+        in the Software without restriction, including without limitation the rights
+        to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+        copies of the Software, and to permit persons to whom the Software is
+        furnished to do so, subject to the following conditions:
+        
+        The above copyright notice and this permission notice shall be included in all
+        copies or substantial portions of the Software.
+        
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+        OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+        SOFTWARE.
+        
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: imageio==2.36.0
+Requires-Dist: matplotlib==3.7.2
+Requires-Dist: numpy==1.24.3
+Requires-Dist: scipy==1.9.0
+Requires-Dist: taichi==1.7.4
+Dynamic: license-file
+
+# CelerisAi
+
+<p align="center">
+  <img src="https://github.com/wrenteria/CelerisAi/blob/main/docs/source/images/CelerisAILogo.png" alt="CelerisAI Logo" width="400">
+</p>
+
+<p align="center">
+    <img src="https://img.shields.io/github/license/wrenteria/CelerisAi" alt="Github License">
+    <img src="https://img.shields.io/github/stars/wrenteria/CelerisAi" alt="Github stars">
+    <img src="https://img.shields.io/github/forks/wrenteria/CelerisAi" alt="Github forks">
+</p>
+
+CelerisAi is a Python-[Taichi](https://github.com/taichi-dev/taichi)-based software designed for nearshore wave modeling. This solver offers high-performance simulations on various hardware platforms and seamlessly integrates with machine learning and artificial intelligence environments. The solver leverages the flexibility of Python for customization and interoperability, while Taichi's high-performance parallel programming capabilities ensure efficient computations.
+
+## Key Features
+* High Performance: CelerisAi delivers efficient simulations on a wide range of hardware, from personal laptops to high-performance computing clusters.
+* Machine Learning Integration: The solver's seamless integration with AI frameworks empowers users to develop hybrid models and leverage data-driven approaches.
+* Flexibility and Customization: CelerisAi's Python-based implementation provides a high degree of customization and adaptability to meet specific modeling needs.
+* Interoperability: The solver's compatibility with various Python libraries and tools enhances its versatility and integration capabilities.
+
+## Applications
+CelerisAi can be applied to a variety of coastal engineering problems, including:
+- Wave propagation modeling
+- Coastal hydrodynamics
+- Tsunami simulation
+- Inverse problems (e.g., depth inversion)
+- Assimilation problems
+
+## Quick Start
+Use the editable install so the `CelerisAI` package is available from any working directory.
+
+```bash
+git clone https://github.com/wrenteria/CelerisAi.git
+cd CelerisAi
+python -m venv .venv
+source .venv/bin/activate
+pip install -e .
+```
+
+## Documentation
+The full user guide, API references, and examples live in the Sphinx docs under `docs/`. Hosted documentation is available at [CelerisAi’s documentation](https://wrenteria.github.io/CelerisAi/).
+
+## Examples
+After installing, run one of the sample simulations:
+
+### 1D simulation with CelerisAI
+Minimal 1D setup script for running CelerisAI.
+
+[1D profile](./setrun_1D.py)
+
+![1Dprofile](docs/source/images/Celeris1D.gif)
+```bash
+python setrun_1D.py
+```
+
+### Using CelerisWEBGPU configuration
+
+Run a CelerisAI example using the SAME configuration layout as [CelerisWEBGPU](https://plynett.github.io/).
+
+[Balboa beach](./setrun_web.py)
+
+![Balboa](docs/source/images/BalboaBeach.gif)
+```bash
+python setrun_web.py
+```
+
+### Control image/log output interval
+
+`Evolve` prints progress and saves frames (when `saveimg=True`) every 100 steps by default.
+You can change this with `plot_interval`:
+
+```python
+run = Evolve(solver=solver, maxsteps=10000, saveimg=True, plot_interval=25)
+```
+
+## Tutorial Notebooks
+
+Jupyter tutorials that mirror the main run scripts are available in `notebooks/`:
+
+- [`notebooks/setrun_1D_tutorial.ipynb`](notebooks/setrun_1D_tutorial.ipynb): step-by-step 1D setup from `setrun_1D.py`.
+- [`notebooks/setrun_web_tutorial.ipynb`](notebooks/setrun_web_tutorial.ipynb): CelerisWebGPU-style 2D case setup from `setrun_web.py`.
+
+## Dependencies
+### Core requirements
+Installed automatically by `pip install -e .`:
+
+- Python 3.x
+- Taichi
+- NumPy
+- SciPy
+- Matplotlib
+- ImageIO
+
+### Optional requirements
+PyTorch is used for AI integration workflows. Install it separately if you plan to run the differentiability or learning examples.
+
+
+## License
+CelerisAi is released under the MIT License. See [LICENSE](https://github.com/wrenteria/CelerisAi/blob/main/LICENSE) for details.
+
+## Contributions
+CelerisAi is an open-source project. Contributions from the community are welcome. Please refer to the project's guidelines for contributing.
+
+## Citation
+If you find this version of CelerisAI useful for your research, consider citing:
+
+```
+@article{Renteria_2025,
+title={CelerisAi: A Nearshore Wave Modeling Framework for Integrated AI Applications},
+url={http://dx.doi.org/10.22541/essoar.174129311.11936719/v1},
+DOI={10.22541/essoar.174129311.11936719/v1},
+publisher={Authorea, Inc.},
+author={Renteria, Willington and Lynett, Patrick and Bonus, Justin and Mccann, Maile and Ebrahimi, Behzad},
+year={2025},
+month=mar }
+```

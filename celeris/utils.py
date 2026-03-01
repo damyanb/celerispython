@@ -224,10 +224,8 @@ def sineWave(x,y,t,d,amplitude,period,theta,phase,g,wave_type):
     Note:
         - The calculation for wave number `k` uses a simplified relationship assuming
           linear wave theory with a hyperbolic tangent term for finite depth.
-        - The term `ti.min(1.0, t / period)` is used to gradually ramp up the wave
-          from zero at t=0 (avoid sudden wave onset).
-        - If `wave_type == 2`, an additional decay factor is applied as `t` approaches 
-          `num_waves * period` (here `num_waves` is hard-coded to 4 in the example). For a transient pulse
+        - If `wave_type == 2`, a decay factor is applied as `t` approaches
+          `num_waves * period` (here `num_waves` is hard-coded to 4). For a transient pulse.
         - The returned `hu` and `hv` are computed as a fraction of `g * eta / (c * k) * tanh(k * d)`,
           scaled by the direction cosines `(cos(theta), sin(theta))`.
     """
@@ -237,8 +235,7 @@ def sineWave(x,y,t,d,amplitude,period,theta,phase,g,wave_type):
     kx = ti.cos(theta) * x * k
     ky = ti.sin(theta) * y * k
 
-    # Gradual wave ramp-up factor (t < period => wave amplitude ramps up linearly in time)
-    eta = amplitude * ti.sin(omega * t - kx - ky + phase)*ti.min(1.0, t / period)
+    eta = amplitude * ti.sin(omega * t - kx - ky + phase)
     
     ### Check this is only valid for sinewves/irregualr
     num_waves=0

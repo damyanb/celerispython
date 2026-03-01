@@ -31,23 +31,27 @@ Tip:
 
 """
 import taichi as ti
-from celeris.domain import Topodata, BoundaryConditions,Domain
+from celeris.domain import Topodata, BoundaryConditions, Domain
 from celeris.solver import Solver
 from celeris.runner import Evolve
 import time
+import numpy as np
+from tqdm import tqdm
+import json
+import os
 
 # -----------------------------------------------------------------------------
 # User settings (match your downloaded CelerisWEBGPU example folder)
 # -----------------------------------------------------------------------------
-EXAMPLES_DIR = "./examples"   # folder that contains downloaded CelerisWEBGPU examples
-CASE = "Balboa"               # example case folder name inside EXAMPLES_DIR
+EXAMPLES_DIR = "./"   # folder that contains downloaded CelerisWEBGPU examples
+CASE = "setup"               # example case folder name inside EXAMPLES_DIR
 CASE_PATH = f"{EXAMPLES_DIR}/{CASE}"
 
 # Taichi execution backend:
 # - ti.gpu is typically best on machines with CUDA/Metal/Vulkan working properly
 # - fall back to ti.cpu if you are debugging or GPU is not available
-ti.init(arch = ti.gpu)
-
+# ti.init(arch = ti.gpu)
+ti.init(arch = ti.cpu)
 # Numeric precision used internally by the solver:
 # - ti.f32 is recommended (stable + fast)
 precision =ti.f32 # ti.f16 for half-precision
@@ -59,7 +63,7 @@ baty = Topodata(datatype='celeris',path=CASE_PATH)
 
 # 2) Set Boundary conditions
 # celeris=True: read the config.json file from CelerisWEBGPU
-bc = BoundaryConditions(celeris=True,path='./examples/Balboa',precision=precision)
+bc = BoundaryConditions(celeris=True,path='./setup',precision=precision)
 
 # 3) Build Numerical Domain
 d = Domain(topodata=baty,precision=precision)
@@ -70,9 +74,15 @@ d = Domain(topodata=baty,precision=precision)
 solver = Solver(domain=d, boundary_conditions=bc)
 solver.model ='Bouss'
 
-# 5) Execution
-# saveimg=True , will save plots at ./plots directory
-run = Evolve(solver = solver, maxsteps= 6000, saveimg=True)
+# 5) Duración máxima en tiempo físico (s) desde config.json
+with open(CASE_PATH + '/config.json', 'r') as f:
+    config = json.load(f)
+max_duration_s = float(config.get('maxdurationTimeSeries', config.get('trigger_writesurface_end_time', 150)))
+maxsteps = int(max_duration_s / solver.dt)
+
+# 6) Salida: el runner escribe elev_*.bin, time_*.txt en outdir (según config.json)
+os.makedirs("./data", exist_ok=True)
+run = Evolve(solver=solver, maxsteps=maxsteps, saveimg=False, outdir="./data")
 
 # Visualization:
 # variable options depend on what the solver exposes; common ones are:
@@ -87,3 +97,11 @@ run = Evolve(solver = solver, maxsteps= 6000, saveimg=True)
 
 # Headless execution (No Visualization) is typically faster:
 run.Evolve_Headless()
+
+# -----------------------------------------------------------------------------
+# 7) Guardar malla para plot.py (elev_*.bin y time_*.txt ya los escribe el runner)
+# -----------------------------------------------------------------------------
+x_coord, y_coord, zz = solver.domain.grid()
+for name, data in [("x_coord.npy", x_coord), ("y_coord.npy", y_coord), ("zz.npy", zz)]:
+    np.save(os.path.join("./data", name), data)
+print("Malla guardada en ./data. Archivos elev_*.bin y time_*.txt escritos por el runner.")

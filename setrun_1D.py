@@ -96,8 +96,8 @@ d = Domain(
 # 3) Solver configuration
 # -----------------------------------------------------------------------------
 # model='Bouss': enhanced Boussinesq-type formulation (weakly dispersive, nonlinear)
-# timeScheme=2: scheme selection 
-# pred_or_corrector=True: enables predictor/corrector scheme 
+# timeScheme=2: scheme selection
+# pred_or_corrector=True: enables predictor/corrector scheme
 # useBreakingModel=True: enables wave breaking parameterization
 
 solver = Solver(
@@ -117,8 +117,7 @@ solver = Solver(
 run = Evolve(solver=solver, maxsteps=6000,saveimg=True)
 
 # Display mode (1D visualization)
-run.Evolve_1D_Display()
-
+#run.Evolve_1D_Display()
+run.Evolve_Headless()
 # For headless (no GUI) runs, comment out the display line above and use:
 # run.Evolve_Headless()
-

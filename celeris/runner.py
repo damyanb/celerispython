@@ -274,6 +274,31 @@ class Evolve:
         # To test pressure
         #self.solver.Ship_pressure(px_init=10,py_init=50,steps=int(i))
 
+    def _write_surface_files(self, write_dir, write_counter, t, state):
+        """Write elev_, time_, P_, Q_ files (Celeris WebGPU format) from config options."""
+        cfg = getattr(self.solver.bc, 'configfile', None)
+        if cfg is None:
+            return
+        write_eta = int(cfg.get('write_eta', 1))
+        write_P = int(cfg.get('write_P', 0))
+        write_Q = int(cfg.get('write_Q', 0))
+        write_turb = int(cfg.get('write_turb', 0))
+        fmt = '{:04d}'.format(write_counter)
+        with open(os.path.join(write_dir, 'time_{}.txt'.format(fmt)), 'w') as f:
+            f.write('{:f}\n'.format(t))
+        if write_eta:
+            eta = state[:, :, 0].T.astype(np.float32)
+            eta.tofile(os.path.join(write_dir, 'elev_{}.bin'.format(fmt)))
+        if write_P:
+            P = state[:, :, 1].T.astype(np.float32)
+            P.tofile(os.path.join(write_dir, 'P_{}.bin'.format(fmt)))
+        if write_Q:
+            Q = state[:, :, 2].T.astype(np.float32)
+            Q.tofile(os.path.join(write_dir, 'Q_{}.bin'.format(fmt)))
+        if write_turb:
+            turb = state[:, :, 3].T.astype(np.float32)
+            turb.tofile(os.path.join(write_dir, 'turb_{}.bin'.format(fmt)))
+
     def Evolve_Headless(self):
         """
         Runs CelerisAi without any visualization, printing timing info periodically
@@ -283,15 +308,47 @@ class Evolve:
           1. Calls Evolve_0() to initialize fields and solver state.
           2. Loops over `maxsteps`, calling Evolve_Steps() each iteration.
           3. Logs simulation time and performance metrics every `plot_interval` steps.
-          4. If an output directory is specified, saves solver state arrays to .npy files.
+          4. If config.json write options are set (write_eta, write_P, write_Q, etc.),
+             writes elev_*.bin, time_*.txt, P_*.bin, Q_*.bin at dt_writesurface intervals
+             between trigger_writesurface_start_time and trigger_writesurface_end_time
+             (Celeris WebGPU-compatible format).
         """
         self.Evolve_0()
         start_time = time.time()
 
+        cfg = getattr(self.solver.bc, 'configfile', None)
+        write_dir = self.outdir if self.outdir else base_frame_dir
+        write_counter = 0
+        last_write_time = -1.0
+        dt_writesurface = 0.25
+        trigger_start = 0.0
+        trigger_end = 1e9
+        trigger_on = 0
+        if cfg is not None:
+            dt_writesurface = float(cfg.get('dt_writesurface', 0.25))
+            trigger_start = float(cfg.get('trigger_writesurface_start_time', 0.0))
+            trigger_end = float(cfg.get('trigger_writesurface_end_time', 1e9))
+            trigger_on = int(cfg.get('trigger_writesurface', 0))
+        if trigger_on and (int(cfg.get('write_eta', 1)) or int(cfg.get('write_P', 0)) or int(cfg.get('write_Q', 0)) or int(cfg.get('write_turb', 0))):
+            os.makedirs(write_dir, exist_ok=True)
+            t0 = 0.0
+            if trigger_start <= t0 <= trigger_end:
+                state0 = self.solver.State.to_numpy()
+                self._write_surface_files(write_dir, write_counter, t0, state0)
+                write_counter += 1
+                last_write_time = t0
+
         for i in range(self.maxsteps):
             self.Evolve_Steps(i)
+            t = self.dt * (i + 1)
             if i==1:
                 start_time = time.time() - 0.00001  # reset the "start" time as there is overhead before loop starts, and add small shift to prevent float divide by zero
+
+            if trigger_on and trigger_start <= t <= trigger_end and (t - last_write_time) >= dt_writesurface:
+                state = self.solver.State.to_numpy()
+                self._write_surface_files(write_dir, write_counter, t, state)
+                write_counter += 1
+                last_write_time = t
 
             if i==1 or (i % self.plot_interval) == 0:
                 compTime = time.time() - start_time
